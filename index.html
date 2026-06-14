@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Good Thing 音源數據觀測儀表板</title>
+    <title>fate 音源數據儀表板</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
@@ -14,38 +14,64 @@
             margin: 0;
             padding: 20px;
         }
+
         .container {
             max-width: 1000px;
             margin: 0 auto;
         }
+/* 修改原本的 .song-card，增加 flex-direction */
         .song-card {
-            background: #1e1e1e; /* 改為深灰色 */
-            color: #fff;        /* 文字改為白色 */
+            background: #1e1e1e;
+            color: #fff;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15); /* 調整陰影 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
             margin-bottom: 20px;
+            display: flex;
+            flex-direction: column; /* 改為垂直排列 */
+            align-items: stretch;
+            gap: 20px;
+        }
+
+        /* 新增：專門管理歌名與右側圖片的橫向區塊 */
+        .song-header-flex {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap; /* 確保在小螢幕時也能自動適應 */
-}
-        .song-info h2 {
-    margin: 0 0 5px 0;
-    font-size: 24px;
-}
-.song-info p {
-    margin: 0;
-    color: #aaa;
-    font-size: 14px;
-}
+            width: 100%;
+        }
 
-/* 新增：中間與右側數據區塊的統一容器 */
-.stats-container {
-    display: flex;
-    align-items: center;
-    gap: 30px; /* 每個方塊之間的間距 */
-}
+        .song-info h2 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+        }
+
+        .song-info p {
+            margin: 0;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        /* 新增：歌曲封面圖片樣式 (長寬體、不切割) */
+        .song-cover {
+            width: 70%;
+            max-width: 1000px;
+            min-width: 100px;
+            height: 10%;
+            object-fit: contain;     /* 保持長寬比例，不切割圖片 */
+            border-radius: 6px;      /* 精緻微圓角 */
+            background-color: #2a2a2a; /* 圖片載入前或比例不符時的襯底背景 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            flex-shrink: 0;          /* 防止圖片被擠壓變形 */
+            margin-left: 15px;
+        }
+        /* 新增：中間與右側數據區塊的統一容器 */
+        .stats-container {
+            display: flex;
+            justify-content: space-between; /* 均分空間 */
+            width: 100%; /* 確保撐滿寬度 */
+            gap: 10px;
+        }
 
 /* 數據方塊基本設計 */
 .stat-box {
@@ -96,9 +122,107 @@
             font-size: 12px;
         }
         .btn.active { background: #00cd3c; color: white; }
+
+/* 旋轉提示的基本樣式 */
+.orientation-warning {
+    align-items: center;
+    justify-content: center;
+    background: rgba(30, 30, 30, 0.95); /* 深灰色背景 */
+    border: 2px solid #00cd3c; /* 經典亮綠色邊框 */
+    border-radius: 12px;
+    padding: 0px;/* 將原本的 20px 上下內距縮減為 0px */
+    margin: 10px 0 20px 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    animation: pulse 2s infinite;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.warning-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.warning-icon {
+    font-size: 22px;
+    animation: spin 4s linear infinite;
+    display: inline-block;
+}
+
+.warning-content p {
+    margin: 0;
+    color: #ffffff;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.warning-content b {
+    color: #00cd3c;
+}
+
+/* 手機版響應式優化 */
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    
+    .song-card { padding: 15px; }
+    
+    .song-info h2 { font-size: 20px; }
+    
+    .stat-box {
+        text-align: center; /* 手機版改為置中更美觀 */
+    }
+    
+    .stat-box .value { font-size: 16px; }
+    .stat-box .label { font-size: 10px; }
+    
+    /* 隱藏圖表標題的長文字，避免破版 */
+    .chart-title { font-size: 14px; }
+    .btn { padding: 4px 8px; font-size: 10px; }
+}
+
+/* 動態特效 */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 4px 12px rgba(0, 205, 60, 0.2); border-color: rgba(0, 205, 60, 0.6); }
+    50% { box-shadow: 0 4px 20px rgba(0, 205, 60, 0.6); border-color: rgba(0, 205, 60, 1); }
+    100% { box-shadow: 0 4px 12px rgba(0, 205, 60, 0.2); border-color: rgba(0, 205, 60, 0.6); }
+}
+
+/* 引導圖片自適應縮放樣式 */
+.guide-img {
+    width: 30%;          /* 讓圖片寬度最大撐滿容器 */
+    max-width: 50px;        /* 限制最大寬度，避免在平板或大螢幕上突然變得太大 */
+    min-width: 30px;        /* 限制最小寬度，避免在極小的小手機上變太小看不清 */
+    height: auto;         /* 高度自動等比例縮放，防止圖片變形 */
+    display: block;       /* 消除圖片下方微小間隙 */
+    margin: 0 auto 15px auto;       /* 圖片水平置中 */
+    border-radius: 8px;   /* 可選：給圖片加點圓角，看起來更精緻 */
+}
+
+/* 微調原有的內容容器，確保完全置中 */
+.warning-content {
+    text-align: center;
+    padding: 20px;
+    width: 85%;           /* 限制提示內容不要貼緊手機邊緣 */
+    max-width: 400px;
+}
+
     </style>
 </head>
 <body>
+
+<div id="rotateWarning" class="orientation-warning">
+    <div class="warning-content">
+        <img src="https://i-dle-melon.github.io/fate/icon.png" alt="" class="guide-img">
+<p>為了獲得最佳的圖表使用體驗，建議將手機轉為<b>橫螢幕</b>使用唷！</p>
+    </div>
+</div>
+
 
 <div class="container">
 
@@ -109,9 +233,12 @@
 
     <div class="song-card">
     <div class="song-info">
-        <h2 id="songTitle">Good Thing</h2>
+      <img src="https://i-dle-melon.github.io/fate/fate.png"class="song-cover" alt="歌曲封面">
+      <div class="song-text">
+        <h2 id="songTitle">fate</h2>
         <p id="songArtist">i-dle*</p>
     </div>
+</div>
 
     <div class="stats-container">
         <div class="stat-box">
@@ -135,7 +262,7 @@
 
     <div class="chart-card">
         <div class="chart-header">
-            <div class="chart-title">收聽量動態趨勢曲線</div>
+            <div class="chart-title">收聽量動態趨勢曲線 <span style="color: #888888;font-size: 12px;">--- 點曲線查看每日音源</span></div>
             <div class="btn-group">
                 <button class="btn" onclick="updatePeriod(7)">7天</button>
                 <button class="btn" onclick="updatePeriod(14)">14天</button>
@@ -153,7 +280,7 @@
 <script>
 // ================= 配置區 =================
 // 請貼上你從 Google 試算表發布的 CSV 網址
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSK6iUeL_Nrc6YHQCw4_jmAsbiXL1B2zO6kiKx_WXk-KX8HSIsoVzvelwLxt7w7wR_-toYnoYGJApn9/pub?gid=1703196335&single=true&output=csv";
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2tAPWZ6nYBl2t_8WZ7uaeJpxjesXYQGYnRXCi9rfhE-AkxvmFA5zoll4ltl0QckA0Vi9WgiJEBzfU/pub?gid=1813146225&single=true&output=csv";
 // ==========================================
 
 const ctx = document.getElementById('trendChart').getContext('2d');
@@ -170,10 +297,22 @@ async function init() {
     if (isLocalFile) {
         if (uploadBlock) uploadBlock.style.display = 'flex';
         setupExcelListener();
+// 強制讓瀏覽器一進場就無視所有條件，直接把提示框叫出來
+document.getElementById('rotateWarning').style.setProperty('display', 'flex', 'important');
     } else {
         if (uploadBlock) uploadBlock.style.display = 'none';
         await fetchSpreadsheetData();
     }
+updatePeriod(14); 
+    
+    // 2. 同步更新按鈕樣式（移除全部按鈕的 active，給 14 天按鈕加上 active）
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText.includes('14天')) {
+            btn.classList.add('active');
+        }
+    });
 }
 
 // 邏輯 A：抓取 Google 試算表 (CSV)
@@ -312,13 +451,13 @@ function updateDashboard() {
         }
 
         // 5. 渲染圖表
-        renderChart(0);
+        renderChart(14);
     } else {
         if (isLocalFile) alert("未能成功解析數據，請確認 Excel 欄位順序是否為 A~F 欄。");
     }
 }
 
-function renderChart(days) {
+function renderChart(days= 14) {
     if (rawData.length === 0) return;
     
     const displayData = days === 0 ? rawData : rawData.slice(-days);
@@ -451,7 +590,7 @@ function renderChart(days) {
                     ticks: { color: '#aaa' },
                     grid: { color: '#333' }
                 }
-            },
+            }
 }
         
     });
@@ -483,12 +622,55 @@ trendChart.data.datasets.forEach((dataset, index) => {
 
 function updatePeriod(days) {
     const buttons = document.querySelectorAll('.btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    if (event && event.target) event.target.classList.add('active');
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // 2. 如果是手動點擊，將 active 樣式加在觸發事件的那個按鈕上
+    if (event && event.target) {
+        event.target.classList.add('active');
+    } else {
+        // 如果是初始化自動呼叫（沒有傳入 event），則手動找到 14 天的按鈕並加上 active
+        buttons.forEach(btn => {
+            if (btn.innerText.includes(days + '天')) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    // 3. 執行原本的渲染邏輯
     renderChart(days);
 }
 // 啟動流程
 init();
+
+// 自動偵測手機螢幕方向的函數
+function checkOrientation() {
+    const warningEl = document.getElementById('rotateWarning');
+    if (!warningEl) return;
+
+    // 1. 先判斷是不是手機/平板裝置 (寬度小於 1024px)
+    const isMobile = window.innerWidth <= 1024;
+    
+    // 2. 判斷是否為直螢幕 (高度大於寬度)
+    const isPortrait = window.innerHeight > window.innerWidth;
+
+    // 如果同時是小螢幕（手機）又是直螢幕，就強制顯示；否則隱藏
+    if (isMobile && isPortrait) {
+        warningEl.style.display = 'flex';
+    } else {
+        warningEl.style.display = 'none';
+    }
+}
+
+// 頁面進場載入時檢查一次
+window.addEventListener('DOMContentLoaded', checkOrientation);
+// 手機轉向或視窗大小改變時，即時再次檢查
+window.addEventListener('resize', checkOrientation);
+
 </script>
 </body>
 </html>
+<footer class="site-footer">
+    <p>© 2026 <a href="https://line.me/ti/g2/lquJYJWOJudOLkUti7prCFNeSbvKF2vn2AdEYQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank">i-dle西瓜攤</a>GigiBoss. All rights reserved. Designed & Maintained by GigiBoss</p>
+</footer>
