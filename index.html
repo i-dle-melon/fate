@@ -86,6 +86,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             flex-shrink: 0;          /* 防止圖片被擠壓變形 */
             margin-left: 15px;       /* 與左邊文字保持間距 */
+            margin-right: 15px;       /* 與右邊保持間距 */
         }
         /* 新增：中間與右側數據區塊的統一容器 */
         .stats-container {
@@ -576,8 +577,8 @@ function renderChart(days= 14) {
         position: 'left',
         title: { 
             display: true, 
-            text: '收 聽 量 ＋ － <<     /     >> 每 日 收 聽 量', 
-            color: '#aaa', 
+            text: '收 聽 量 ±          /        每 日 收 聽 量', 
+            color: '#00cd3c', 
             rotation: 0,
             font: {
                 size: 14,       // 設定字體大小，例如 14px
@@ -592,7 +593,7 @@ function renderChart(days= 14) {
         title: { 
             display: true, 
             text: '累 積 總 收 聽 量', 
-            color: '#aaa', 
+            color: '#4a90e2', 
             rotation: 0,
             font: {
                 size: 14,       // 這裡也同步設定
@@ -608,7 +609,7 @@ function renderChart(days= 14) {
     title: { 
         display: true, 
         text: '日 榜 排 名', 
-        color: '#aaa',
+        color: '#ed4c67',
         font: {
             size: 14 // 已新增字體大小設定
         }
@@ -645,9 +646,18 @@ function renderChart(days= 14) {
         }
     });
 
-// 2. 在 Chart 初始化後，新增此邏輯產生勾選框
+// 2. 在 Chart 初始化後，新增此邏輯產生勾選框與 Y 軸標題同步
 const legendContainer = document.getElementById('customLegend');
 legendContainer.innerHTML = ''; 
+
+// 定義每個數據集對應的 Y 軸 ID 與其主題顏色
+const axisConfig = {
+    0: { axisId: 'yDaily', activeColor: '#00cd3c' }, // 每日收聽量
+    1: { axisId: 'yTotal', activeColor: '#4a90e2' }, // 累積總收聽量
+    2: { axisId: 'yDaily', activeColor: '#ff9f43' }, // 收聽量增減 (共用左軸，可依需求調整顏色)
+    3: { axisId: 'yDaily', activeColor: '#9b59b6' }, // 每日切瓜號數
+    4: { axisId: 'yRank',  activeColor: '#ed4c67' }  // 日榜排名
+};
 
 trendChart.data.datasets.forEach((dataset, index) => {
     const div = document.createElement('div');
@@ -660,10 +670,43 @@ trendChart.data.datasets.forEach((dataset, index) => {
     
     div.onclick = () => {
         const isVisible = trendChart.isDatasetVisible(index);
+        
+        // 1. 切換曲線顯示/隱藏
         isVisible ? trendChart.hide(index) : trendChart.show(index);
         checkbox.checked = !isVisible;
+        
+        // 2. 同步更新 Y 軸標題文字顏色
+        const config = axisConfig[index];
+        if (config) {
+            const targetAxis = trendChart.options.scales[config.axisId];
+            
+            if (config.axisId === 'yDaily') {
+                targetAxis.title.color = '#00cd3c'; // 左軸固定回歸綠色
+            } else if (config.axisId === 'yTotal') {
+                targetAxis.title.color = '#4a90e2'; // 右軸1固定回歸藍色
+            } else if (config.axisId === 'yRank') {
+                targetAxis.title.color = '#ed4c67'; // 右軸2固定回歸粉紅
+            }
+            
+            // 3. 特殊邏輯：處理共用 yDaily 左軸的情況（每日收聽與增減共用）
+            // 如果左軸的所有曲線都被隱藏了，才將左軸文字完全變灰
+            if (config.axisId === 'yDaily') {
+                const isDailyVisible = trendChart.isDatasetVisible(0);
+                const isChangeVisible = trendChart.isDatasetVisible(2);
+                const isAccountsVisible = trendChart.isDatasetVisible(3);
+                
+                if (!isDailyVisible && !isChangeVisible && !isAccountsVisible) {
+                    trendChart.options.scales.yDaily.title.color = '#444444';
+                } else if (!isVisible) {
+                    // 誰剛被點開，就優先亮誰的顏色
+                    trendChart.options.scales.yDaily.title.color = config.activeColor;
+                }
+            }
+        }
+        
+        // 讓圖表即時重繪，套用新顏色
+        trendChart.update();
     };
-
     div.appendChild(checkbox);
     div.appendChild(document.createTextNode(dataset.label));
     legendContainer.appendChild(div);
