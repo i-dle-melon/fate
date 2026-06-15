@@ -39,7 +39,13 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
+            margin-bottom: 15px;
         }
+        .song-info {
+            display: flex; /*讓圖片和文字強制並排在同一行，不會再掉到上方 */
+            align-items: center; /* 讓圖片和右邊的文字在垂直方向居中對齊 */
+            gap: 15px; /* 讓圖片和文字之間保持 15px 的舒適間距 */
+}
 
         .song-info h2 {
             margin: 0 0 5px 0;
@@ -51,19 +57,35 @@
             color: #aaa;
             font-size: 14px;
         }
+        /* 調整原本的文字區塊，使其不換行擠壓 */
+        .song-info-text {
+            flex-grow: 1;
+        }
 
+        .song-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            color: #fff;
+        }
+
+        .song-artist {
+            font-size: 16px;
+            color: #aaa;
+            margin: 0;
+        }
         /* 新增：歌曲封面圖片樣式 (長寬體、不切割) */
         .song-cover {
-            width: 70%;
-            max-width: 1000px;
-            min-width: 100px;
+            width: auto;
             height: 10%;
+            max-height: 100px;
+            min-height: 30px;
             object-fit: contain;     /* 保持長寬比例，不切割圖片 */
             border-radius: 6px;      /* 精緻微圓角 */
             background-color: #2a2a2a; /* 圖片載入前或比例不符時的襯底背景 */
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             flex-shrink: 0;          /* 防止圖片被擠壓變形 */
-            margin-left: 15px;
+            margin-left: 15px;       /* 與左邊文字保持間距 */
         }
         /* 新增：中間與右側數據區塊的統一容器 */
         .stats-container {
@@ -71,6 +93,9 @@
             justify-content: space-between; /* 均分空間 */
             width: 100%; /* 確保撐滿寬度 */
             gap: 10px;
+        }
+        .song-text {
+            text-align: left; /* 確保文字靠左對齊 */
         }
 
 /* 數據方塊基本設計 */
@@ -233,11 +258,12 @@
 
     <div class="song-card">
     <div class="song-info">
-      <img src="https://i-dle-melon.github.io/fate/fate.png"class="song-cover" alt="歌曲封面">
       <div class="song-text">
         <h2 id="songTitle">fate</h2>
         <p id="songArtist">i-dle*</p>
     </div>
+        <img src="https://i-dle-melon.github.io/fate/fate.png"class="song-cover" alt="歌曲封面">
+
 </div>
 
     <div class="stats-container">
@@ -524,10 +550,21 @@ function renderChart(days= 14) {
             ]
         },
         options: {
-            responsive: true,
-            interaction: { mode: 'index', intersect: false },
-            elements: {
-        point: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+        // 1. 控制圖表中央的提示框（Tooltip）
+        tooltip: {
+            callbacks: {
+                title: function(context) {
+                    return context[0].label;
+                }
+            }
+        }
+    },
+
+    elements: {
+    point: {
             radius: 2,           // 正常狀態下的點半徑 (設為 0 可隱藏)
             hoverRadius: 10,      // 滑鼠懸停時的點半徑 (調大這裡即可)
             hoverBorderWidth: 2  // 滑鼠懸停時的邊框寬度
@@ -587,12 +624,25 @@ function renderChart(days= 14) {
 },
 
                 x: {
-                    ticks: { color: '#aaa' },
+                    ticks: { 
+                        color: '#aaa',
+                        callback: function(val, index) {
+                            // 拿到目前的原始日期文字 (如 "2026-06-13" 或 "2026/06/13")
+                            const rawDate = this.getLabelForValue(val);
+                            const dateObj = new Date(rawDate);
+                            
+                            if (!isNaN(dateObj)) {
+                                const month = dateObj.getMonth() + 1; // 取得月份 (不補零)
+                                const day = dateObj.getDate();        // 取得日期 (不補零)
+                                return `${month}/${day}`;             // 回傳成 6/13 格式
+                            }
+                            return rawDate; // 萬一解析失敗則回傳原始值
+                        }
+                    },
                     grid: { color: '#333' }
                 }
             }
-}
-        
+        }
     });
 
 // 2. 在 Chart 初始化後，新增此邏輯產生勾選框
